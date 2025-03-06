@@ -1,0 +1,50 @@
+name: Fetch Closed PRs and Output to CSV
+ 
+on:
+  workflow_dispatch:
+    inputs:
+      repository:
+        description: 'Repository to fetch closed PRs from (repo)'
+        required: true
+        type: string
+defaults:
+  run:
+    shell: bash
+env:
+    ORG_NAME: "openpitrix" 
+    GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+jobs:
+  fetch-closed-prs:
+    runs-on: ubuntu-latest
+ 
+    steps:
+      - name: Install jq
+        run: sudo apt update && sudo apt install -y jq
+ 
+      - name: Fetch closed PRs via API and convert to CSV  
+        run: |
+          REPO="${{ github.event.inputs.repository }}"
+          echo "Fetching closed PRs for repository: $REPO"
+          RULESETS=$(curl -s -L \
+                -H "Accept: application/vnd.github+json" \
+                -H "Authorization: Bearer $GH_TOKEN" \
+                -H "X-GitHub-Api-Version: 2022-11-28" \
+                https://api.github.com/repos/$ORG_NAME/$repo/rulesets)
+          
+ 
+          # API Request to get closed PRs
+          API_RESPONSE=$(curl -s -H "Accept: application/vnd.github.v3+json"\
+               -H " Authorization: token $GH_TOKEN" \
+               "https://api.github.com/repos/$ORG_NAME/$REPO/pulls?state=closed&per_page=100" )
+          echo "https://api.github.com/repos/$ORG_NAME/$REPO/pulls?state=closed&per_page=100"
+          echo "GitHub API Response: $API_RESPONSE"
+          echo "$API_RESPONSE" | jq -r 'if type=="array" then .[] | [.number, .title] | @csv else empty end' \
+               > closed_prs.csv
+ 
+          echo "Closed PRs saved to closed_prs.csv"
+ 
+      - name: Upload PR List as CSV Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: closed_prs_csv
+          path: closed_prs.csv
