@@ -33,14 +33,15 @@ jobs:
           echo "https://api.github.com/repos/$ORG_NAME/$REPO/pulls?state=closed&per_page=100"
           # echo "GitHub API Response: $API_RESPONSE"
 
-          PR_numbers = $(echo "$API_RESPONSE" | jq -r 'if type=="array" then .[] | [.number] | @csv else empty end') 
+          PR_numbers=$(echo "$API_RESPONSE" | jq -r 'if type=="array" then .[] | [.number] | @csv else empty end') 
           echo "PR_Number,Reviewer,State,Comment,Submitted_At" > closed_prs.csv
+          echo "$PR_numbers"
           for PR in $PR_numbers; do
             echo "Fecthing Review Comments for PR #$PR"
 
             REVIEWS = $(curl -s -H "Accept: application/vnd.github.v3+json"\
                 -H " Authorization: token $GH_TOKEN" \
-                "https://api.github.com/repos/$ORG_NAME/$REPO/pulls$PR/reviews" )
+                "https://api.github.com/repos/$ORG_NAME/$REPO/pulls/$PR/reviews" )
             
             echo "$REVIEWS" | jq -r --arg PR "$PR" \
             '.[] | [$PR,.user.login,.state,.body,.Submitted_at] | @csv' >> closed_prs.csv 
