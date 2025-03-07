@@ -33,7 +33,7 @@ jobs:
           echo "https://api.github.com/repos/$ORG_NAME/$REPO/pulls?state=closed&per_page=100"
           # echo "GitHub API Response: $API_RESPONSE"
 
-          PR_numbers=$(echo "$API_RESPONSE" | jq -r 'if type=="array" then .[] | [.number]  else empty end') 
+          PR_numbers=$(echo "$API_RESPONSE" | jq -r 'if type=="array" then .[] | .number  else empty end') 
           echo "PR_Number,Reviewer,Comment," > closed_prs.csv
           echo "$PR_numbers"
           for PR in $PR_numbers; do
