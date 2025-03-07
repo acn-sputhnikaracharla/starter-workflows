@@ -39,7 +39,7 @@ jobs:
           for PR in $PR_numbers; do
             echo "Fecthing Review Comments for PR #$PR"
 
-            REVIEWS = $(curl -s -H "Accept: application/vnd.github.v3+json"\
+            REVIEWS=$(curl -s -H "Accept: application/vnd.github.v3+json"\
                 -H " Authorization: token $GH_TOKEN" \
                 "https://api.github.com/repos/$ORG_NAME/$REPO/pulls/$PR/reviews" )
             
